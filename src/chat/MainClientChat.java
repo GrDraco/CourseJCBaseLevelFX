@@ -6,11 +6,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class Main extends Application {
+public class MainClientChat extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("ViewMain.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("viewClientChat.fxml"));
         primaryStage.setResizable(false);
         primaryStage.setTitle("Chat");
         primaryStage.setScene(new Scene(root));
