@@ -16,7 +16,7 @@
 <AnchorPane prefHeight="387.0" prefWidth="587.0"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="chat.ViewClientChat"
+            fx:controller="chat.ViewClientChat_2"
             onKeyPressed="#keyPressed">
    <children>
       <Pane fx:id="panelBody" prefHeight="200.0" prefWidth="200.0" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -56,7 +56,7 @@
          <children>
             <AnchorPane prefHeight="387.0" prefWidth="587.0">
                <children>
-                  <TextField fx:id="textLogin" layoutX="169.0" layoutY="98.0" text="ititov" AnchorPane.topAnchor="100.0">
+                  <TextField fx:id="textLogin" layoutX="169.0" layoutY="98.0" text="frasulov" AnchorPane.topAnchor="100.0">
                      <font>
                         <Font size="20.0" />
                      </font>

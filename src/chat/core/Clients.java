@@ -2,10 +2,12 @@ package chat.core;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
-public class Clients extends Thread {
+public class Clients extends Thread implements IMessageListener {
     private final String WAITING_CONNECT_CLIENT = "Ожидаем подключение клиента";
     private final String CONNECTED_CLIENT = "Клиент подключился";
 
@@ -24,7 +26,12 @@ public class Clients extends Thread {
             public final ArrayList<Client> clients = new ArrayList<>();
             @Override
             public synchronized String auth(String login, String password) {
-                return clients.stream().filter(client -> client.getLogin().equals(login) && client.getPassword().equals(password)).findFirst().get().getNickName();
+                try {
+                    return clients.stream().filter(client -> client.getLogin().equals(login) && client.getPassword().equals(password)).findFirst().get().getNickName();
+                }
+                catch (Exception e) {
+                    return null;
+                }
             }
 
             @Override
@@ -43,7 +50,9 @@ public class Clients extends Thread {
             do {
                 Thread.sleep(100);
                 logListener.onSetLog(WAITING_CONNECT_CLIENT);
-                handlers.add(new ClientHandler(serverSocket.accept(), logListener, loader));
+                synchronized(handlers) {
+                    handlers.add(new ClientHandler(serverSocket.accept(), this, logListener, loader));
+                }
                 logListener.onSetLog(CONNECTED_CLIENT);
             } while (!isInterrupted());
         } catch (Exception e) {
@@ -51,20 +60,30 @@ public class Clients extends Thread {
         }
     }
 
-    public void sendMessageToAll(Message message) {
+    public synchronized void sendMessageToAll(Message message) {
         handlers.forEach(client -> {
-            if (client.isConnected())
-                client.sendMessage(message);
-            else {
-                handlers.remove(client);
+            synchronized(this) {
+                if (client.isConnected() && !client.getNickName().equals(message.getNickName()))
+                    client.sendMessage(message);
+                else {
+                    //if (!client.isConnected())
+                    //    handlers.remove(client);
+                }
             }
         });
     }
 
-    public void sendMessageTo(String nickName, Message message) {
+    public synchronized void sendMessageTo(String nickName, Message message) {
         handlers.forEach(client -> {
-            if (client.getNickName().equals(nickName))
-                client.sendMessage(message);
+            synchronized(this) {
+                if (client.getNickName().equals(nickName))
+                    client.sendMessage(message);
+            }
         });
+    }
+
+    @Override
+    public synchronized void onNewMessage(Message message, Socket socket) throws Exception {
+        sendMessageToAll(message);
     }
 }

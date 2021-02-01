@@ -15,7 +15,7 @@ import javafx.scene.layout.Pane;
 
 import java.net.Socket;
 
-public class ViewClientChat {
+public class ViewClientChat_2 {
 
     private ChatClient model;
 

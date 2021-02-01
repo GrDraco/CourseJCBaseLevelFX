@@ -4,6 +4,7 @@ import java.net.Socket;
 
 public class ClientHandler implements IMessageListener {
     private final String AUTHORIZED = "Авторизовался пользователь ";
+    private final String NOT_AUTH = "not auth";
 
     private final Socket socket;
     private final ILogListener logListener;
@@ -11,10 +12,12 @@ public class ClientHandler implements IMessageListener {
     private final ReaderSocket reader;
     private boolean isAuthorized;
     private String nickName;
-    private IDbLoader loader;
+    private final IDbLoader loader;
+    private final IMessageListener serverListener;
 
-    public ClientHandler(Socket socket, ILogListener logListener, IDbLoader loader) throws Exception {
+    public ClientHandler(Socket socket, IMessageListener serverListener, ILogListener logListener, IDbLoader loader) throws Exception {
         this.socket = socket;
+        this.serverListener = serverListener;
         this.logListener = logListener;
         this.reader = new ReaderSocket(socket, this, logListener);
         this.loader = loader;
@@ -22,14 +25,14 @@ public class ClientHandler implements IMessageListener {
         // Ожидаем авторизацию
         reader.start();
         // По истечении таймаута
-        new Thread(() -> {
-            try {
-                Thread.sleep(120000);
-                reader.interrupt();
-            } catch (InterruptedException e) {
-                logListener.onSetLog(e.toString());
-            }
-        });
+//        new Thread(() -> {
+//            try {
+//                Thread.sleep(120000);
+//                reader.interrupt();
+//            } catch (InterruptedException e) {
+//                logListener.onSetLog(e.toString());
+//            }
+//        });
     }
 
     public String getNickName() {
@@ -41,7 +44,7 @@ public class ClientHandler implements IMessageListener {
     }
 
     public void sendMessage(Message message) {
-        if(!socket.isClosed() && isAuthorized && writer != null)
+        if(!socket.isClosed() && writer != null)
             writer.sendMessage(message);
     }
 
@@ -49,16 +52,21 @@ public class ClientHandler implements IMessageListener {
     public void onNewMessage(Message message, Socket socket) throws Exception {
         if(message.getType() == EnumMessageType.AUTH) {
             nickName = loader.auth(message.readLogin(), message.readPassword());
-            if (nickName != null && nickName.isEmpty()) {
+            if (nickName != null && !nickName.isEmpty()) {
                 isAuthorized = true;
                 logListener.onSetLog(AUTHORIZED + nickName);
                 writer = new WriterSocket(nickName, socket, null, logListener);
                 sendMessage(Message.createNickName(nickName));
             }
+            else {
+                writer = new WriterSocket(NOT_AUTH, socket, null, logListener);
+                sendMessage(Message.createAuthFail());
+            }
         } else if (message.getType() == EnumMessageType.FINISH) {
             reader.interrupt();
         } else if (message.getType() == EnumMessageType.MESSAGE) {
             logListener.onSetLog(message.toString());
+            serverListener.onNewMessage(message, socket);
         }
     }
 }
