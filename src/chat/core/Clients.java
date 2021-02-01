@@ -50,9 +50,7 @@ public class Clients extends Thread implements IMessageListener {
             do {
                 Thread.sleep(100);
                 logListener.onSetLog(WAITING_CONNECT_CLIENT);
-                synchronized(handlers) {
-                    handlers.add(new ClientHandler(serverSocket.accept(), this, logListener, loader));
-                }
+                handlers.add(new ClientHandler(serverSocket.accept(), this, logListener, loader));
                 logListener.onSetLog(CONNECTED_CLIENT);
             } while (!isInterrupted());
         } catch (Exception e) {
@@ -60,30 +58,29 @@ public class Clients extends Thread implements IMessageListener {
         }
     }
 
-    public synchronized void sendMessageToAll(Message message) {
+    public void sendMessageToAll(Message message) {
         handlers.forEach(client -> {
-            synchronized(this) {
-                if (client.isConnected() && !client.getNickName().equals(message.getNickName()))
-                    client.sendMessage(message);
-                else {
-                    //if (!client.isConnected())
-                    //    handlers.remove(client);
-                }
+            if (client != null && client.isConnected() && !client.getNickName().equals(message.getNickName()))
+                client.sendMessage(message);
+            else {
+                //if (!client.isConnected())
+                //    handlers.remove(client);
             }
         });
     }
 
     public synchronized void sendMessageTo(String nickName, Message message) {
         handlers.forEach(client -> {
-            synchronized(this) {
-                if (client.getNickName().equals(nickName))
-                    client.sendMessage(message);
-            }
+            if (client != null && client.getNickName().equals(nickName))
+                client.sendMessage(message);
         });
     }
 
     @Override
     public synchronized void onNewMessage(Message message, Socket socket) throws Exception {
-        sendMessageToAll(message);
+        if (message.getRecipient() != null && !message.getRecipient().isEmpty())
+            sendMessageTo(message.getRecipient(), message);
+        else
+            sendMessageToAll(message);
     }
 }

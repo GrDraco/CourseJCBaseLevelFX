@@ -25,14 +25,14 @@ public class ClientHandler implements IMessageListener {
         // Ожидаем авторизацию
         reader.start();
         // По истечении таймаута
-//        new Thread(() -> {
-//            try {
-//                Thread.sleep(120000);
-//                reader.interrupt();
-//            } catch (InterruptedException e) {
-//                logListener.onSetLog(e.toString());
-//            }
-//        });
+        new Thread(() -> {
+            try {
+                Thread.sleep(120000);
+                reader.interrupt();
+            } catch (InterruptedException e) {
+                logListener.onSetLog(e.toString());
+            }
+        });
     }
 
     public String getNickName() {
@@ -40,7 +40,7 @@ public class ClientHandler implements IMessageListener {
     }
 
     public boolean isConnected() {
-        return socket != null && socket.isClosed();
+        return socket != null && !socket.isClosed();
     }
 
     public void sendMessage(Message message) {
