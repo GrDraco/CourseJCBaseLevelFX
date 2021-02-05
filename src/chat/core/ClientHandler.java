@@ -24,15 +24,6 @@ public class ClientHandler implements IMessageListener {
         this.isAuthorized = false;
         // Ожидаем авторизацию
         reader.start();
-        // По истечении таймаута
-        new Thread(() -> {
-            try {
-                Thread.sleep(120000);
-                reader.interrupt();
-            } catch (InterruptedException e) {
-                logListener.onSetLog(e.toString());
-            }
-        });
     }
 
     public String getNickName() {
