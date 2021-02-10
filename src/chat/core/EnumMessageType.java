@@ -5,5 +5,6 @@ public enum EnumMessageType {
     AUTH,
     FINISH,
     NICK_NAME,
-    AUTH_FAIL
+    AUTH_FAIL,
+    CHANGE_NICK_NAME
 }

@@ -33,6 +33,10 @@ public class Message {
         return new Message("", login + DIV + password, EnumMessageType.AUTH);
     }
 
+    public static Message createChangeNickName(String currNickName, String newNickName) {
+        return new Message(currNickName, newNickName, EnumMessageType.CHANGE_NICK_NAME);
+    }
+
     Message(String nickName, String text, EnumMessageType type) {
         id = UUID.randomUUID().toString();
         this.text = text;

@@ -1,16 +1,10 @@
 package chat.core;
 
-import com.google.gson.Gson;
-
-import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 public class ChatServer {
 
-
     private final IChatViewModel viewModel;
-    private WriterSocket writer;
 
     public ChatServer(IChatViewModel viewModel) throws Exception {
         if (viewModel == null)
