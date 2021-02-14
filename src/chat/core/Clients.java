@@ -1,11 +1,8 @@
 package chat.core;
 
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.stream.Stream;
 
 public class Clients extends Thread implements IMessageListener {
     private final String WAITING_CONNECT_CLIENT = "Ожидаем подключение клиента";
@@ -14,7 +11,6 @@ public class Clients extends Thread implements IMessageListener {
     private final ServerSocket serverSocket;
     private final ILogListener logListener;
     private final ArrayList<ClientHandler> handlers;
-    private final IDbLoader loader;
 
     public Clients(ServerSocket serverSocket, ILogListener logListener) throws Exception {
         if (serverSocket == null || logListener == null)
@@ -22,26 +18,6 @@ public class Clients extends Thread implements IMessageListener {
         this.serverSocket = serverSocket;
         this.logListener = logListener;
         this.handlers = new ArrayList<>();
-        this.loader = new IDbLoader() {
-            public final ArrayList<Client> clients = new ArrayList<>();
-            @Override
-            public synchronized String auth(String login, String password) {
-                try {
-                    return clients.stream().filter(client -> client.getLogin().equals(login) && client.getPassword().equals(password)).findFirst().get().getNickName();
-                }
-                catch (Exception e) {
-                    return null;
-                }
-            }
-
-            @Override
-            public void addClient(String login, String nickName, String password)
-            {
-                clients.add(new Client(login, nickName, password));
-            }
-        };
-        this.loader.addClient("ititov", "IT", "123");
-        this.loader.addClient("frasulov", "FR","321");
     }
 
     @Override
@@ -50,7 +26,7 @@ public class Clients extends Thread implements IMessageListener {
             do {
                 Thread.sleep(100);
                 logListener.onSetLog(WAITING_CONNECT_CLIENT);
-                handlers.add(new ClientHandler(serverSocket.accept(), this, logListener, loader));
+                handlers.add(new ClientHandler(serverSocket.accept(), this, logListener));
                 logListener.onSetLog(CONNECTED_CLIENT);
             } while (!isInterrupted());
         } catch (Exception e) {

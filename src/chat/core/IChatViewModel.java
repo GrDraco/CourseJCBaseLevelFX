@@ -5,6 +5,8 @@ import java.net.Socket;
 // Интерфейс взаимодейтсвия с ViewModel приложения
 public interface IChatViewModel extends IMessageListener, IMessageTextListener, ILogListener {
 
+    void onChangedNickName(String nickName);
+
     @Override
     void onNewMessage(Message message, Socket socket);
 

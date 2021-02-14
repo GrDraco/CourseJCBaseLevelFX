@@ -36,6 +36,12 @@ public class ChatClient extends Thread implements IMessageListener{
             writer.sendMessage(Message.createAuth(login, password));
     }
 
+    public void sendChangeNickName(String nickName)
+    {
+        if(writer != null)
+            writer.sendMessage(Message.createChangeNickName(this.nickName, nickName));
+    }
+
     public void sendMessage(String message)
     {
         if(writer != null)
@@ -50,10 +56,19 @@ public class ChatClient extends Thread implements IMessageListener{
     public void onNewMessage(Message message, Socket socket) throws Exception {
         if(message.getType() == EnumMessageType.MESSAGE)
             Platform.runLater(new Thread(() -> viewModel.onNewMessage(message, socket)));
-        else if (message.getType() == EnumMessageType.NICK_NAME || message.getType() == EnumMessageType.AUTH_FAIL) {
+        else if (nickName != null && message.getType() == EnumMessageType.NICK_NAME) {
+            nickName = message.getText() != null && !message.getText().isEmpty() ? message.getText() : null;
+            writer = new WriterSocket(nickName, socket, viewModel, viewModel);
+            Platform.runLater(new Thread(() -> {
+                viewModel.onChangedNickName(nickName);
+            }));
+        } else if (nickName == null && (message.getType() == EnumMessageType.NICK_NAME || message.getType() == EnumMessageType.AUTH_FAIL)) {
             nickName = message.getText() != null && !message.getText().isEmpty() ? message.getText() : null;
             writer = isAuthorized() ? new WriterSocket(nickName, socket, viewModel, viewModel) : writer;
-            Platform.runLater(new Thread(() -> viewModel.onAuth(isAuthorized())));
+            Platform.runLater(new Thread(() -> {
+                viewModel.onAuth(isAuthorized());
+                viewModel.onChangedNickName(nickName);
+            }));
         }
     }
 }

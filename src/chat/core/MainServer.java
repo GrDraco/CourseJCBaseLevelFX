@@ -1,5 +1,7 @@
 package chat.core;
 
+import chat.core.loader.Loader;
+
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -9,14 +11,15 @@ public class MainServer {
         try {
             new ChatServer(new IChatViewModel() {
                 @Override
+                public void onChangedNickName(String nickName) { }
+
+                @Override
                 public void onNewMessage(Message message, Socket socket) {
                     System.out.println(message.toString());
                 }
 
                 @Override
-                public void onAuth(boolean success) {
-
-                }
+                public void onAuth(boolean success) { }
 
                 @Override
                 public String getMessageText() {
@@ -45,7 +48,15 @@ public class MainServer {
 
                 @Override
                 public void onClose() {
-                    System.exit(0);
+                    try {
+                        Loader.close();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    finally {
+                        System.exit(0);
+                    }
                 }
 
                 @Override

@@ -4,6 +4,7 @@ import chat.core.ChatClient;
 import chat.core.EnumMessageType;
 import chat.core.IChatViewModel;
 import chat.core.Message;
+import chat.core.loader.Loader;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -38,6 +39,9 @@ public class ViewClientChat {
     private TextField textMessage;
 
     @FXML
+    private TextField textNickName;
+
+    @FXML
     private Label labelTextFail;
 
     @FXML
@@ -48,9 +52,23 @@ public class ViewClientChat {
     }
 
     @FXML
+    void buttonNickNameClick() {
+        String nickName = textNickName.getText();
+        if (nickName.isEmpty())
+            return;
+        model.sendChangeNickName(nickName);
+    }
+
+    @FXML
     protected void initialize() {
         try {
             model = new ChatClient(new IChatViewModel() {
+                @Override
+                public void onChangedNickName(String nickName) {
+                    textNickName.setText(nickName);
+                    listMessages.getItems().add(Message.createMessage("Server", "Ваш ник: " + nickName).toStringShort());
+                }
+
                 @Override
                 public void onNewMessage(Message message, Socket socket) {
                     if (model.isAuthorized()) {
@@ -104,7 +122,15 @@ public class ViewClientChat {
 
                 @Override
                 public void onClose() {
-                    System.exit(0);
+                    try {
+                        Loader.close();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    finally {
+                        System.exit(0);
+                    }
                 }
 
                 @Override
