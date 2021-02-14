@@ -6,12 +6,20 @@ import java.util.UUID;
 // Модель обмена данными между сервером и клиентом
 public class Message {
     private static final String DIV = "//";
+    private static final String HISTORY_DIV = "-|-";
 
     private String id;
     private EnumMessageType type;
     private String nickName;
     private String recipient;
     private String text;
+
+    public static Message parse(String history) {
+        String[] parts = history.split(HISTORY_DIV);
+        Message message = new Message(parts[0], parts[2], EnumMessageType.MESSAGE);
+        message.id = parts[1];
+        return message;
+    }
 
     public static Message createMessage(String nickName, String text) {
         return new Message(nickName, text, EnumMessageType.MESSAGE);
@@ -91,5 +99,9 @@ public class Message {
     @Override
     public String toString() {
         return String.format("%s (%s): %s", nickName, id, text);
+    }
+
+    public String toHistory() {
+        return String.format("%s%s%s%s%s", nickName, HISTORY_DIV, id, HISTORY_DIV, text);
     }
 }

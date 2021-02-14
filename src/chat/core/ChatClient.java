@@ -1,5 +1,6 @@
 package chat.core;
 
+import chat.core.history.History;
 import javafx.application.Platform;
 
 import java.net.Socket;
@@ -54,21 +55,39 @@ public class ChatClient extends Thread implements IMessageListener{
 
     @Override
     public void onNewMessage(Message message, Socket socket) throws Exception {
-        if(message.getType() == EnumMessageType.MESSAGE)
+        if(message.getType() == EnumMessageType.MESSAGE) {
+            History.getInstance().add(message);
             Platform.runLater(new Thread(() -> viewModel.onNewMessage(message, socket)));
+        }
         else if (nickName != null && message.getType() == EnumMessageType.NICK_NAME) {
-            nickName = message.getText() != null && !message.getText().isEmpty() ? message.getText() : null;
+            setNickName(message.getText() != null && !message.getText().isEmpty() ? message.getText() : null);
             writer = new WriterSocket(nickName, socket, viewModel, viewModel);
             Platform.runLater(new Thread(() -> {
                 viewModel.onChangedNickName(nickName);
             }));
         } else if (nickName == null && (message.getType() == EnumMessageType.NICK_NAME || message.getType() == EnumMessageType.AUTH_FAIL)) {
-            nickName = message.getText() != null && !message.getText().isEmpty() ? message.getText() : null;
+            boolean changeNickName = !isAuthorized();
+            setNickName(message.getText() != null && !message.getText().isEmpty() ? message.getText() : null);
             writer = isAuthorized() ? new WriterSocket(nickName, socket, viewModel, viewModel) : writer;
             Platform.runLater(new Thread(() -> {
-                viewModel.onAuth(isAuthorized());
-                viewModel.onChangedNickName(nickName);
+                if (changeNickName)
+                    viewModel.onChangedNickName(nickName);
+                else {
+                    viewModel.onAuth(isAuthorized());
+                    try {
+                        History.getInstance().last(100).forEach(msg -> {
+                            viewModel.onNewMessage(msg, socket);
+                        });
+                    } catch (Exception e) {
+                        viewModel.onSetLog(e.toString());
+                    }
+                }
             }));
         }
+    }
+
+    private void setNickName(String value) {
+        nickName = value;
+        History.createInstance(nickName, viewModel);
     }
 }
