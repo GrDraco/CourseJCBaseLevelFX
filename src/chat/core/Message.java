@@ -6,7 +6,7 @@ import java.util.UUID;
 // Модель обмена данными между сервером и клиентом
 public class Message {
     private static final String DIV = "//";
-    private static final String HISTORY_DIV = "-|-";
+    private static final String HISTORY_DIV = "-//-";
 
     private String id;
     private EnumMessageType type;
@@ -78,6 +78,10 @@ public class Message {
 
     public String getNickName() {
         return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
     }
 
     public EnumMessageType getType() {
