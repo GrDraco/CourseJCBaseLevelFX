@@ -15,6 +15,8 @@ public class Message {
     private String text;
 
     public static Message parse(String history) {
+        if (!history.contains(HISTORY_DIV))
+            return null;
         String[] parts = history.split(HISTORY_DIV);
         Message message = new Message(parts[0], parts[2], EnumMessageType.MESSAGE);
         message.id = parts[1];

@@ -37,8 +37,11 @@ public class History {
             List<String> lines = reader.lines().collect(Collectors.toList());
             lines.forEach(line -> {
                 index.getAndIncrement();
-                if (line != null && !line.isEmpty() && (index.get() > lines.size() - count))
-                    messages.add(Message.parse(line));
+                if (line != null && !line.isEmpty() && (index.get() > lines.size() - count)) {
+                    Message message = Message.parse(line);
+                    if (message != null)
+                        messages.add(message);
+                }
             });
         } catch (IOException e) {
             logListener.onSetLog(e.toString());
