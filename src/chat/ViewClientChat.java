@@ -71,6 +71,10 @@ public class ViewClientChat {
 
                 @Override
                 public void onNewMessage(Message message, Socket socket) {
+                    if (message == null)
+                        return;
+                    if (message.getNickName().equals(model.getNickName()))
+                        message.setNickName("Вы");
                     if (model.isAuthorized()) {
                         panelAuth.setVisible(false);
                         panelBody.setVisible(true);
@@ -150,8 +154,11 @@ public class ViewClientChat {
         String message = textMessage.getText();
         if (message.isEmpty())
             return;
-        listMessages.getItems().add(message);
-        model.sendMessage(message);
+        try {
+            model.onNewMessage(model.sendMessage(message), null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         textMessage.clear();
     }
 

@@ -1,14 +1,17 @@
 package chat.core;
 
+import chat.core.history.History;
 import javafx.application.Platform;
 
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ChatClient extends Thread implements IMessageListener{
     private final IChatViewModel viewModel;
     private ReaderSocket reader;
     private WriterSocket writer;
     private String nickName;
+    private History history;
 
     public ChatClient(IChatViewModel viewModel) throws Exception {
         if (viewModel == null)
@@ -42,10 +45,14 @@ public class ChatClient extends Thread implements IMessageListener{
             writer.sendMessage(Message.createChangeNickName(this.nickName, nickName));
     }
 
-    public void sendMessage(String message)
+    public Message sendMessage(String message)
     {
-        if(writer != null)
-            writer.sendMessage(message);
+        if(writer != null) {
+            Message send = writer.sendMessage(message);
+            //history.add(send);
+            return send;
+        }
+        return null;
     }
 
     public boolean isAuthorized() {
@@ -54,21 +61,42 @@ public class ChatClient extends Thread implements IMessageListener{
 
     @Override
     public void onNewMessage(Message message, Socket socket) throws Exception {
-        if(message.getType() == EnumMessageType.MESSAGE)
+        if(message.getType() == EnumMessageType.MESSAGE) {
+            history.add(message);
             Platform.runLater(new Thread(() -> viewModel.onNewMessage(message, socket)));
+        }
         else if (nickName != null && message.getType() == EnumMessageType.NICK_NAME) {
-            nickName = message.getText() != null && !message.getText().isEmpty() ? message.getText() : null;
+            setNickName(message.getText() != null && !message.getText().isEmpty() ? message.getText() : null);
             writer = new WriterSocket(nickName, socket, viewModel, viewModel);
             Platform.runLater(new Thread(() -> {
                 viewModel.onChangedNickName(nickName);
             }));
         } else if (nickName == null && (message.getType() == EnumMessageType.NICK_NAME || message.getType() == EnumMessageType.AUTH_FAIL)) {
-            nickName = message.getText() != null && !message.getText().isEmpty() ? message.getText() : null;
+            boolean changeNickName = isAuthorized();
+            setNickName(message.getText() != null && !message.getText().isEmpty() ? message.getText() : null);
             writer = isAuthorized() ? new WriterSocket(nickName, socket, viewModel, viewModel) : writer;
             Platform.runLater(new Thread(() -> {
-                viewModel.onAuth(isAuthorized());
-                viewModel.onChangedNickName(nickName);
+                if (changeNickName)
+                    viewModel.onChangedNickName(nickName);
+                else {
+                    viewModel.onAuth(isAuthorized());
+                    viewModel.onChangedNickName(nickName);
+                    ArrayList<Message> messages = history.last(100);
+                    if (messages != null)
+                        messages.forEach(msg -> {
+                            viewModel.onNewMessage(msg, socket);
+                        });
+                }
             }));
         }
+    }
+
+    private void setNickName(String value) {
+        nickName = value;
+        history = new History(nickName, viewModel);
+    }
+
+    public String getNickName() {
+        return nickName;
     }
 }
