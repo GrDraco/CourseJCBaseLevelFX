@@ -3,6 +3,8 @@ package chat.core;
 import chat.core.loader.Loader;
 
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler implements IMessageListener {
     private final String AUTHORIZED = "Авторизовался пользователь ";
@@ -15,24 +17,26 @@ public class ClientHandler implements IMessageListener {
     private boolean isAuthorized;
     private String nickName;
     private final IMessageListener serverListener;
+    private final ExecutorService executorService;
 
     public ClientHandler(Socket socket, IMessageListener serverListener, ILogListener logListener) throws Exception {
         this.socket = socket;
         this.serverListener = serverListener;
         this.logListener = logListener;
+        this.executorService = Executors.newFixedThreadPool(2);
         this.reader = new ReaderSocket(socket, this, logListener);
         this.isAuthorized = false;
         // Ожидаем авторизацию
-        reader.start();
+        executorService.execute(reader);
         // По истечении таймаута
-        new Thread(() -> {
+        executorService.execute(new Thread(() -> {
             try {
                 Thread.sleep(120000);
                 reader.interrupt();
             } catch (InterruptedException e) {
                 logListener.onSetLog(e.toString());
             }
-        });
+        }));
     }
 
     public String getNickName() {
@@ -63,7 +67,7 @@ public class ClientHandler implements IMessageListener {
                 sendMessage(Message.createAuthFail());
             }
         } else if (message.getType() == EnumMessageType.FINISH) {
-            reader.interrupt();
+            executorService.shutdown();
         } else if (message.getType() == EnumMessageType.CHANGE_NICK_NAME) {
             Loader.changeNickName(message.getNickName(), message.getText());
             nickName = message.getText();
