@@ -3,8 +3,6 @@ package chat.core;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ChatServer implements IMessageListener {
     private final String WAITING_CONNECT_CLIENT = "Ожидаем подключение клиента";

@@ -1,11 +1,14 @@
 package chat.core;
 
 import chat.core.loader.Loader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.Socket;
 import java.util.Scanner;
 
 public class MainServer {
+    private static final Logger LOG = LogManager.getLogger(ChatServer.class);
     public static void main(String[] args) {
         // Тестирование сервера
         try {
@@ -15,7 +18,7 @@ public class MainServer {
 
                 @Override
                 public void onNewMessage(Message message, Socket socket) {
-                    System.out.println(message.toString());
+                    LOG.trace(message.toString());
                 }
 
                 @Override
@@ -61,7 +64,7 @@ public class MainServer {
 
                 @Override
                 public void onSetLog(String message) {
-                    System.out.println(message);
+                    LOG.trace(message);
                 }
             }).start();
         }
